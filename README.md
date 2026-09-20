@@ -1,3 +1,5 @@
+> **勘境 / KineWorld research fork:** 感谢原作者的开源贡献。See [KINEWORLD.md](KINEWORLD.md) for acknowledgements, our changes and validation limits. Original authorship and licenses are preserved.
+
 
 🆕 **[2026-03-16]:** :fire: V-JEPA 2.1 is released :fire: A new familly of models trained with a novel recipe that learns high quality and temporolly consistent dense features !!!
 
