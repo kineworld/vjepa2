@@ -5,10 +5,20 @@
 
 import torch
 
-# VJEPA_BASE_URL = "https://dl.fbaipublicfiles.com/vjepa2"
+VJEPA_BASE_URL = "https://dl.fbaipublicfiles.com/vjepa2"
 
-# for testing
-VJEPA_BASE_URL = "http://localhost:8300"
+
+def _load_pretrained_state(model_file, checkpoint_path=None):
+    """Use explicit local weights without a network fallback, or the official host."""
+    if checkpoint_path is not None:
+        from pathlib import Path
+        path = Path(checkpoint_path)
+        if not path.is_file():
+            raise FileNotFoundError(path)
+        return torch.load(path, map_location="cpu", weights_only=True)
+    return torch.hub.load_state_dict_from_url(
+        VJEPA_BASE_URL + f"/{model_file}.pt", map_location="cpu", weights_only=True)
+
 
 ARCH_NAME_MAP = {
     # V-JEPA 2
@@ -42,8 +52,11 @@ def _make_vjepa2_ac_model(
     tubelet_size=2,
     num_frames=64,
     pretrained: bool = True,
+    checkpoint_path=None,
     **kwargs,
 ):
+    if checkpoint_path is not None and not pretrained:
+        raise ValueError("checkpoint_path requires pretrained=True")
     from ..models import (
         ac_predictor as vit_ac_predictor,
         vision_transformer as vit_encoder,
@@ -78,8 +91,7 @@ def _make_vjepa2_ac_model(
 
     if pretrained:
         model_file = ARCH_NAME_MAP[model_name][-1]
-        url = VJEPA_BASE_URL + f"/{model_file}.pt"
-        state_dict = torch.hub.load_state_dict_from_url(url, map_location="cpu")
+        state_dict = _load_pretrained_state(model_file, checkpoint_path)
         encoder_state_dict = _clean_backbone_key(state_dict["encoder"])
         encoder.load_state_dict(encoder_state_dict, strict=False)
         predictor_state_dict = _clean_backbone_key(state_dict["predictor"])
@@ -99,8 +111,11 @@ def _make_vjepa2_model(
     predictor_embed_dim=384,
     predictor_out_embed_dim=None,
     pretrained: bool = True,
+    checkpoint_path=None,
     **kwargs,
 ):
+    if checkpoint_path is not None and not pretrained:
+        raise ValueError("checkpoint_path requires pretrained=True")
     from ..models import predictor as vit_predictor, vision_transformer as vit_encoder
 
     vit_encoder_kwargs = dict(
@@ -143,8 +158,7 @@ def _make_vjepa2_model(
 
     if pretrained:
         model_file = ARCH_NAME_MAP[model_name][-1]
-        url = VJEPA_BASE_URL + f"/{model_file}.pt"
-        state_dict = torch.hub.load_state_dict_from_url(url, map_location="cpu")
+        state_dict = _load_pretrained_state(model_file, checkpoint_path)
         encoder_state_dict = _clean_backbone_key(state_dict[checkpoint_key])
         encoder.load_state_dict(
             encoder_state_dict, strict=False
@@ -222,8 +236,11 @@ def _make_vjepa2_1_model(
     return_all_tokens=False,
     teacher_embed_dim=None,
     pretrained: bool = True,
+    checkpoint_path=None,
     **kwargs,
 ):
+    if checkpoint_path is not None and not pretrained:
+        raise ValueError("checkpoint_path requires pretrained=True")
     from app.vjepa_2_1.models import predictor as vit_predictor, vision_transformer as vit_encoder
 
     vit_encoder_kwargs = dict(
@@ -271,8 +288,7 @@ def _make_vjepa2_1_model(
 
     if pretrained:
         model_file = ARCH_NAME_MAP[model_name][-1]
-        url = VJEPA_BASE_URL + f"/{model_file}.pt"
-        state_dict = torch.hub.load_state_dict_from_url(url, map_location="cpu")
+        state_dict = _load_pretrained_state(model_file, checkpoint_path)
         encoder_state_dict = _clean_backbone_key(state_dict[checkpoint_key])
         encoder.load_state_dict(
             encoder_state_dict, strict=True
